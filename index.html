@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>FLORA • Finanças Botânicas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+    :root {
+        --bg-cream: #FAF6F1;
+        --bg-card: #ffffff;
+        --navy: #14232F;
+        --purple: #8B6BE8;
+        --sage: #8CCFEA;
+        --sage-light: #EFE9FD;
+        --coral: #F76B55;
+        --coral-light: #FFE3DD;
+        --lime: #DAF76A;
+        --text-main: #14232F;
+        --text-muted: #5B6B78;
+        --border: #EAE3D8;
+        --radius: 28px;
+        --radius-sm: 16px;
+        --shadow-lg: 0 24px 60px rgba(20, 35, 47, 0.28);
+        --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        background: var(--bg-cream);
+        color: var(--text-main);
+        line-height: 1.5;
+        padding-bottom: 2rem;
+    }
+    button, input, select { font-family: inherit; }
+    @keyframes fadeIn { from { opacity:0;} to {opacity:1;} }
+    #login {
+        display: none; position: fixed; inset: 0; z-index: 200;
+        background: rgba(20, 35, 47, 0.72); backdrop-filter: blur(6px);
+        align-items: center; justify-content: center; padding: 1.25rem;
+        animation: fadeIn 0.3s ease;
+    }
+    body.locked #login { display: flex; }
+    .lg-card {
+        background: #fff; color: var(--navy); width: 100%; max-width: 400px;
+        border-radius: 32px; padding: 2rem 1.75rem; box-shadow: var(--shadow-lg);
+        display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.75rem;
+    }
+    .lg-card h2 { font-weight: 800; font-size: 1.55rem; }
+    .lg-card input { width: 100%; padding: 0.85rem; margin: 0.5rem 0; border-radius: var(--radius-sm); border: 2px solid var(--border); }
+    .btn-botanic { background: var(--navy); color: #fff; border: none; border-radius: 999px; padding: 0.7rem 1.4rem; font-weight: 800; cursor: pointer; }
+    .btn-botanic:hover { background: var(--purple); }
+    header { background: var(--navy); color: #fff; padding: 1rem 1.5rem; border-radius: 0 0 36px 36px; }
+    .brand h1 { font-size: 2.1rem; }
+    .years { display: flex; gap: 0.6rem; padding: 1rem 1.5rem; overflow-x: auto; }
+    .year-btn { padding: 0.75rem 1.5rem; border: none; border-radius: 20px 20px 8px 8px; background: #fff; cursor: pointer; }
+    .year-btn.active { background: var(--purple); color: #fff; }
+    main { padding: 0 1.5rem; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .hero-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 1rem; margin-bottom: 1.6rem; }
+    .hero-card { background: #fff; border-radius: var(--radius); padding: 1.6rem; }
+    .hero-purple { background: var(--purple); color: #fff; }
+    .hero-lime { background: var(--lime); color: var(--navy); }
+    .hero-sage { background: var(--sage); color: var(--navy); }
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1.6rem 0; }
+    .kpi-card { padding: 1.4rem; border-radius: var(--radius); }
+    .kpi-card.dark { background: var(--navy); color: #fff; }
+    .card { background: #fff; border-radius: var(--radius); padding: 1.6rem; margin-bottom: 1.6rem; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 0.7rem; text-align: left; border-bottom: 1px solid #eee; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; background: var(--sage-light); padding: 1.3rem; border-radius: 24px; margin: 1rem 0; }
+    .form-field input, .form-field select { padding: 0.65rem; border: none; border-radius: 14px; width: 100%; }
+    .month-pills { display: flex; gap: 0.4rem; overflow-x: auto; padding-bottom: 0.5rem; }
+    .month-pill { padding: 0.5rem 1rem; border-radius: 999px; border: none; background: #fff; cursor: pointer; }
+    .month-pill.active { background: var(--purple); color: #fff; }
+    </style>
+</head>
+<body class="locked">
+<!-- LOGIN SCREEN -->
+<div id="login">
+    <div class="lg-card">
+        <h2>🌿 FLORA</h2>
+        <p>Digite sua senha para acessar</p>
+        <input type="password" id="pass" placeholder="Senha">
+        <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.8rem;">
+            <input type="checkbox" id="remember"> Lembrar senha
+        </label>
+        <div class="lg-msg" id="lg-msg"></div>
+        <button class="btn-botanic" onclick="login()">Entrar</button>
+    </div>
+</div>
+
+<!-- HEADER -->
+<header>
+    <div class="header-inner">
+        <div class="brand">
+            <div class="brand-logo">🌿</div>
+            <div class="brand-text">
+                <h1>FLORA</h1>
+                <span>Finanças Pessoais</span>
+            </div>
+        </div>
+        <div class="header-actions">
+            <span class="status-pill" id="current-year-display"></span>
+            <button class="btn-botanic" style="padding:0.4rem 0.8rem;font-size:0.75rem;" onclick="exportData()">⬇ Backup</button>
+            <label class="btn-botanic imp" style="padding:0.4rem 0.8rem;font-size:0.75rem;">
+                ⬆ Importar<input type="file" accept=".json" onchange="importData(this)">
+            </label>
+            <button class="btn-botanic" style="padding:0.4rem 0.8rem;font-size:0.75rem;background:var(--coral);" onclick="logout()">Sair</button>
+        </div>
+    </div>
+</header>
+
+<!-- YEAR SELECTOR -->
+<div class="years" id="year-buttons"></div>
+
+<!-- TABS -->
+<nav class="tabs">
+    <div class="tabs-inner" id="tab-buttons"></div>
+</nav>
+<button class="menu-reopen-btn" onclick="document.querySelector('nav.tabs').classList.remove('nav-hidden')">☰ Menu</button>
+
+<!-- MAIN CONTENT -->
+<main>
+    <!-- DASHBOARD TAB -->
+    <div class="tab-panel" id="tab-dashboard">
+        <div class="section-head">
+            <div>
+                <h2 class="section-title">Visão Geral</h2>
+                <p class="section-subtitle" id="dashboard-subtitle"></p>
+            </div>
+        </div>
+
+        <div class="hero-grid">
+            <div class="hero-card hero-purple">
+                <div class="hero-text">
+                    <h2>Saldo Atual</h2>
+                    <p style="font-size:3rem;font-weight:800;" id="hero-saldo">R$ 0,00</p>
+                    <p style="color:var(--lime);font-weight:600;" id="hero-mes"></p>
+                </div>
+                <div class="hero-art">📊</div>
+            </div>
+            <div class="hero-card hero-lime">
+                <div class="hero-text">
+                    <h3>Receitas</h3>
+                    <p style="font-size:1.6rem;font-weight:800;" id="hero-receitas">R$ 0,00</p>
+                </div>
+                <div class="hero-art sm">💰</div>
+            </div>
+            <div class="hero-card hero-sage">
+                <div class="hero-text">
+                    <h3>Despesas</h3>
+                    <p style="font-size:1.6rem;font-weight:800;" id="hero-despesas">R$ 0,00</p>
+                </div>
+                <div class="hero-art sm">💳</div>
+            </div>
+        </div>
+
+        <div class="kpi-grid">
+            <div class="kpi-card dark">
+                <p class="kpi-label">Economizado</p>
+                <p class="kpi-value" id="kpi-economizado">R$ 0,00</p>
+            </div>
+            <div class="kpi-card gold">
+                <p class="kpi-label">Mês com mais gastos</p>
+                <p class="kpi-value" id="kpi-maior-mes">—</p>
+            </div>
+            <div class="kpi-card">
+                <p class="kpi-label">Média mensal</p>
+                <p class="kpi-value" id="kpi-media">R$ 0,00</p>
+            </div>
+            <div class="kpi-card" style="background:var(--coral-light);">
+                <p class="kpi-label">Gastos este mês</p>
+                <p class="kpi-value" id="kpi-mes-atual">R$ 0,00</p>
+            </div>
+        </div>
+
+        <div class="dash-split">
+            <div class="card">
+                <h3>Distribuição de Gastos</h3>
+                <div class="chart-wrap">
+                    <canvas id="chart-categorias"></canvas>
+                </div>
+            </div>
+            <div class="card">
+                <h3>Receitas x Despesas</h3>
+                <div class="chart-wrap">
+                    <canvas id="chart-mensal"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TRANSACTIONS TAB -->
+    <div class="tab-panel" id="tab-transacoes">
+        <div class="section-head">
+            <div>
+                <h2 class="section-title">Transações</h2>
+                <p class="section-subtitle">Registre suas entradas e saídas</p>
+            </div>
+        </div>
+
+        <div class="form-grid">
+            <div class="form-field">
+                <label>Data</label>
+                <input type="date" id="t-data">
+            </div>
+            <div class="form-field">
+                <label>Tipo</label>
+                <select id="t-tipo">
+                    <option value="renda">Receita</option>
+                    <option value="despesa">Despesa</option>
+                </select>
+            </div>
+            <div class="form-field">
+                <label>Categoria</label>
+                <input type="text" id="t-cat" placeholder="Ex: Aluguel">
+            </div>
+            <div class="form-field">
+                <label>Valor R$</label>
+                <input type="number" step="0.01" id="t-val" placeholder="0,00">
+            </div>
+            <div class="form-field">
+                <label>Descrição</label>
+                <input type="text" id="t-desc" placeholder="Opcional">
+            </div>
+            <button class="btn-botanic" style="align-self:flex-end;" onclick="addTransacao()">Adicionar</button>
+        </div>
+
+        <div class="month-pills" id="month-buttons"></div>
+
+        <div class="card">
+            <h3>
+                <span id="selected-month-name"></span>
+                <span style="font-size:0.8rem;font-weight:400;color:var(--text-muted);" id="month-total"></span>
+            </h3>
+            <div class="table-wrap">
+                <table id="trans-table">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Descrição</th>
+                            <th>Categoria</th>
+                            <th class="num">Valor</th>
+                            <th class="center">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="trans-body">
+                        <tr><td colspan="5" class="empty">Nenhuma transação neste mês</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- CARDS TAB -->
+    <div class="tab-panel" id="tab-cartoes">
+        <div class="section-head">
+            <div>
+                <h2 class="section-title">Cartões de Crédito</h2>
+                <p class="section-subtitle">Controle seus gastos e limites</p>
+            </div>
+        </div>
+
+        <div class="form-grid">
+            <div class="form-field">
+                <label>Nome do cartão</label>
+                <input type="text" id="card-nome" placeholder="Ex: Nubank">
+            </div>
+            <div class="form-field">
+                <label>Limite R$</label>
+                <input type="number" step="0.01" id="card-limite" placeholder="0,00">
+            </div>
+            <div class="form-field">
+                <label>Valor da Fatura R$</label>
+                <input type="number" step="0.01" id="card-fatura" placeholder="0,00">
+            </div>
+            <div class="form-field">
+                <label>Dia de vencimento</label>
+                <input type="number" min="1" max="31" id="card-venc" placeholder="1-31">
+            </div>
+            <button class="btn-botanic" style="align-self:flex-end;" onclick="addCard()">Adicionar</button>
+        </div>
+
+        <div id="cards-list"></div>
+    </div>
+
+    <!-- GOALS TAB -->
+    <div class="tab-panel" id="tab-metas">
+        <div class="section-head">
+            <div>
+                <h2 class="section-title">Metas</h2>
+                <p class="section-subtitle">Acompanhe suas economias</p>
+            </div>
+        </div>
+
+        <div class="form-grid">
+            <div class="form-field">
+                <label>Nome da meta</label>
+                <input type="text" id="meta-nome" placeholder="Ex: Viagem">
+            </div>
+            <div class="form-field">
+                <label>Valor Alvo R$</label>
+                <input type="number" step="0.01" id="meta-alvo" placeholder="0,00">
+            </div>
+            <div class="form-field">
+                <label>Valor Atual R$</label>
+                <input type="number" step="0.01" id="meta-atual" placeholder="0,00">
+            </div>
+            <div class="form-field">
+                <label>Prazo</label>
+                <input type="month" id="meta-prazo">
+            </div>
+            <button class="btn-botanic" style="align-self:flex-end;" onclick="addMeta()">Criar Meta</button>
+        </div>
+
+        <div id="metas-list"></div>
+    </div>
+</main>
+
+<button class="menu-reopen-btn" onclick="document.querySelector('nav.tabs').classList.remove('nav-hidden')">☰</button>
+<script>
+// ══════════════════════════════════════════════════════════════
+// 🛡️ FLORA — INNER CORRECTION LAYER (v1.0)
+// ══════════════════════════════════════════════════════════════
+
+// ─── VALIDATOR ───
+const Validator = {
+  isNumber: (v) => typeof v === 'number' && !isNaN(v) && isFinite(v),
+  isPositive: (v) => Validator.isNumber(v) && v >= 0,
+  isString: (v, min=0, max=200) => typeof v === 'string' && v.length >= min && v.length <= max,
+  isValidDate: (d) => /^\d{4}-\d{2}-\d{2}$/.test(d) && !isNaN(new Date(d).getTime()),
+
+  transaction(tx) {
+    const errors = [];
+    if (!tx.id || !Validator.isString(tx.id, 5)) errors.push('ID inválido');
+    if (!tx.d || !Validator.isValidDate(tx.d)) errors.push('Data inválida');
+    if (!['renda', 'desp'].includes(tx.t)) errors.push('Tipo inválido');
+    if (!Validator.isString(tx.c, 1)) errors.push('Categoria obrigatória');
+    if (!Validator.isString(tx.s, 0, 60)) errors.push('Descrição muito longa');
+    if (!Validator.isPositive(tx.v)) errors.push('Valor deve ser positivo');
+    return { ok: errors.length === 0, errors };
+  }
+};
+
+// ─── CORRECTOR ───
+const Corrector = {
+  transaction(tx) {
+    const fixed = { ...tx };
+    if (!fixed.id) fixed.id = 't' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+    if (fixed.d) {
+      const d = new Date(fixed.d);
+      if (!isNaN(d.getTime())) fixed.d = d.toISOString().split('T')[0];
+    }
+    if (fixed.s) fixed.s = fixed.s.trim().slice(0, 60) || '';
+    fixed.v = Math.abs(parseFloat(fixed.v) || 0);
+    if (!fixed.c) fixed.c = 'Outros';
+    return fixed;
+  },
+
+  repairYear(yearData) {
+    const repaired = { tx: [], cards: [], metas: [], ...yearData };
+    repaired.tx = (repaired.tx || []).map(t => Corrector.transaction(t)).filter(t => t.v > 0);
+    const seenIds = new Set();
+    repaired.tx = repaired.tx.filter(t => !t.id || !seenIds.has(t.id) && seenIds.add(t.id));
+    return repaired;
+  },
+
+  repairAllData(rawData) {
+    const repaired = { anos: {}, ...rawData };
+    for (const ano in repaired.anos) {
+      repaired.anos[ano] = Corrector.repairYear(repaired.anos[ano]);
+    }
+    return repaired;
+  }
+};
+
+// ─── DATA STORE ───
+const Store = {
+  KEY: 'flora_db',
+
+  save(data) {
+    try {
+      const clean = Corrector.repairAllData({ anos: {}, ...data });
+      localStorage.setItem(this.KEY, JSON.stringify(clean));
+      return { ok: true };
+    } catch (e) {
+      console.error('Save error:', e);
+      return { ok: false, error: e.message };
+    }
+  },
+
+  load() {
+    try {
+      const raw = localStorage.getItem(this.KEY);
+      if (!raw) return { anos: {} };
+      return Corrector.repairAllData(JSON.parse(raw));
+    } catch (e) {
+      console.error('Load error:', e);
+      return { anos: {} };
+    }
+  }
+};
+
+// ══════════════════════════════════════════════════════════════
+// 🔐 AUTHENTICATION
+// ══════════════════════════════════════════════════════════════
+const PASSWORD = 'flora2026';
+let isAuthenticated = false;
+let DATA = Store.load();
+let CURRENT_YEAR = new Date().getFullYear();
+let CURRENT_MONTH = String(new Date().getMonth() + 1).padStart(2, '0');
+let CURRENT_TAB = 'dashboard';
+let chartCategorias = null;
+let chartMensal = null;
+
+function login() {
+  const pass = document.getElementById('pass').value;
+  if (pass === PASSWORD) {
+    isAuthenticated = true;
+    document.body.classList.remove('locked');
+    initApp();
+  } else {
+    document.getElementById('lg-msg').textContent = 'Senha incorreta';
+  }
+}
+
+function logout() {
+  isAuthenticated = false;
+  document.body.classList.add('locked');
+  document.getElementById('pass').value = '';
+}
+
+// ══════════════════════════════════════════════════════════════
+// 🚀 APP INITIALIZATION
+// ══════════════════════════════════════════════════════════════
+function initApp() {
+  ensureYearExists(CURRENT_YEAR);
+  renderYearButtons();
+  renderTabButtons();
+  renderMonthButtons();
+  switchTab('dashboard');
+  updateDisplays();
+}
+
+function ensureYearExists(year) {
+  if (!DATA.anos[year]) {
+    DATA.anos[year] = { tx: [], cards: [], metas: [] };
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// 📅 YEAR SELECTOR
+// ══════════════════════════════════════════════════════════════
+function renderYearButtons() {
+  const container = document.getElementById('year-buttons');
+  const years = Object.keys(DATA.anos).sort((a,b) => b - a);
+  if (!years.includes(String(CURRENT_YEAR))) years.unshift(String(CURRENT_YEAR));
+  
+  container.innerHTML = years.map(y => `
+    <button class="year-btn ${y == CURRENT_YEAR ? 'active' : ''}" onclick="selectYear(${y})">${y}</button>
+  `).join('') + `<button class="year-btn" style="background:var(--lime);color:var(--navy);" onclick="addNewYear()">+</button>`;
+  
+  document.getElementById('current-year-display').textContent = CURRENT_YEAR;
+}
+
+function selectYear(year) {
+  CURRENT_YEAR = year;
+  ensureYearExists(year);
+  renderYearButtons();
+  renderMonthButtons();
+  updateDisplays();
+}
+
+function addNewYear() {
+  const y = new Date().getFullYear() + 1;
+  ensureYearExists(y);
+  selectYear(y);
+}
+
+// ══════════════════════════════════════════════════════════════
+// 📑 TABS
+// ══════════════════════════════════════════════════════════════
+const TABS = [
+  { id: 'dashboard', name: '📊 Painel' },
+  { id: 'transacoes', name: '💰 Transações' },
+  { id: 'cartoes', name: '💳 Cartões' },
+  { id: 'metas', name: '🎯 Metas' }
+];
+
+function renderTabButtons() {
+  const container = document.getElementById('tab-buttons');
+  container.innerHTML = TABS.map(t => `
+    <button class="tab-btn ${t.id === CURRENT_TAB ? 'active' : ''}" onclick="switchTab('${t.id}')">${t.name}</button>
+  `).join('');
+}
+
+function switchTab(tabId) {
+  CURRENT_TAB = tabId;
+  document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
+  document.getElementById(`tab-${tabId}`).style.display = 'block';
+  renderTabButtons();
+  document.querySelector('nav.tabs').classList.add('nav-hidden');
+  updateDisplays();
+}
+
+// ══════════════════════════════════════════════════════════════
+// 📆 MONTH SELECTOR
+// ══════════════════════════════════════════════════════════════
+const MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+function renderMonthButtons() {
+  const container = document.getElementById('month-buttons');
+  container.innerHTML = MONTHS.map((name, i) => {
+    const m = String(i + 1).padStart(2, '0');
+    return `<button class="month-pill ${m === CURRENT_MONTH ? 'active' : ''}" onclick="selectMonth('${m}')">${name.slice(0,3)}</button>`;
+  }).join('');
+  updateMonthLabel();
+}
+
+function selectMonth(month) {
+  CURRENT_MONTH = month;
+  renderMonthButtons();
+  updateDisplays();
+}
+
+function updateMonthLabel() {
+  const idx = parseInt(CURRENT_MONTH) - 1;
+  document.getElementById('selected-month-name').textContent = `${MONTHS[idx]} ${CURRENT_YEAR}`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// 📊 DASHBOARD
+// ══════════════════════════════════════════════════════════════
+function updateDisplays() {
+  const yearData = DATA.anos[CURRENT_YEAR] || { tx: [] };
+  const monthTx = yearData.tx.filter(t => t.d.startsWith(`${CURRENT_YEAR}-${CURRENT_MONTH}`));
+  
+  const receitas = monthTx.filter(t => t.t === 'renda').reduce((s,t) => s + t.v, 0);
+  const despesas = monthTx.filter(t => t.t === 'desp').reduce((s,t) => s + t.v, 0);
+  const saldo = receitas - despesas;
+
+  document.getElementById('hero-saldo').textContent = formatBRL(saldo);
+  document.getElementById('hero-receitas').textContent = formatBRL(receitas);
+  document.getElementById('hero-despesas').textContent = formatBRL(despesas);
+  document.getElementById('hero-mes').textContent = MONTHS[parseInt(CURRENT_MONTH)-1];
+
+  const allMonths = {};
+  for (let m = 1; m <= 12; m++) {
+    const mStr = String(m).padStart(2, '0');
+    const mTx = yearData.tx.filter(t => t.d.startsWith(`${CURRENT_YEAR}-${mStr}`));
+    allMonths[mStr] = {
+      renda: mTx.filter(t => t.t === 'renda').reduce((s,t) => s + t.v, 0),
+      desp: mTx.filter(t => t.t === 'desp').reduce((s,t) => s + t.v, 0)
+    };
+  }
+
+  const totalReceitas = Object.values(allMonths).reduce((s,m) => s + m.renda, 0);
+  const totalDespesas = Object.values(allMonths).reduce((s,m) => s + m.desp, 0);
+  const economizado = totalReceitas - totalDespesas;
+  const mesesComGasto = Object.values(allMonths).filter(m => m.desp > 0);
+  const media = mesesComGasto.length ? totalDespesas / mesesComGasto.length : 0;
+  
+  let maxDesp = 0, maxMes = '—';
+  Object.entries(allMonths).forEach(([m, d]) => {
+    if (d.desp > maxDesp) { maxDesp = d.desp; maxMes = MONTHS[parseInt(m)-1].slice(0,3); }
+  });
+
+  document.getElementById('kpi-economizado').textContent = formatBRL(economizado);
+  document.getElementById('kpi-maior-mes').textContent = maxMes;
+  document.getElementById('kpi-media').textContent = formatBRL(media);
+  document.getElementById('kpi-mes-atual').textContent = formatBRL(despesas);
+  document.getElementById('dashboard-subtitle').textContent = `${MONTHS[parseInt(CURRENT_MONTH)-1]} • ${CURRENT_YEAR}`;
+
+  updateTransactionsTable();
+  updateCharts(allMonths, monthTx.filter(t => t.t === 'desp'));
+  updateCardsList();
+  updateGoalsList();
+  Store.save(DATA);
+}
+
+function formatBRL(value) {
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
+}
+
+// ══════════════════════════════════════════════════════════════
+// 💰 TRANSACTIONS
+// ══════════════════════════════════════════════════════════════
+function addTransacao() {
+  const data = document.getElementById('t-data').value;
+  const tipo = document.getElementById('t-tipo').value === 'Receita' ? 'renda' : 'desp';
+  const cat = document.getElementById('t-cat').value || 'Outros';
+  const valor = parseFloat(document.getElementById('t-val').value) || 0;
+  const desc = document.getElementById('t-desc').value;
+
+  if (!data || valor <= 0) { alert('Preencha a data e o valor corretamente!'); return; }
+
+  const tx = Corrector.transaction({ d: data, t: tipo, c: cat, v: valor, s: desc });
+  const validation = Validator.transaction(tx);
+  if (!validation.ok) { alert(validation.errors.join('\\n')); return; }
+
+  const year = data.split('-')[0];
+  ensureYearExists(year);
+  DATA.anos[year].tx.unshift(tx);
+
+  document.getElementById('t-data').value = '';
+  document.getElementById('t-cat').value = '';
+  document.getElementById('t-val').value = '';
+  document.getElementById('t-desc').value = '';
+
+  if (data.startsWith(`${CURRENT_YEAR}-${CURRENT_MONTH}`)) updateDisplays();
+  else selectYear(parseInt(year));
+}
+
+function updateTransactionsTable() {
+  const yearData = DATA.anos[CURRENT_YEAR] || { tx: [] };
+  const monthTx = yearData.tx.filter(t => t.d.startsWith(`${CURRENT_YEAR}-${CURRENT_MONTH}`));
+  const total = monthTx.reduce((s,t) => s + (t.t === 'renda' ? t.v : -t.v), 0);
+  
+  document.getElementById('month-total').textContent = `Saldo do mês: ${formatBRL(total)}`;
+
+  const tbody = document.getElementById('trans-body');
+  if (monthTx.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" class="empty">Nenhuma transação neste mês</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = monthTx.map(tx => `
+    <tr>
+      <td>${tx.d}</td>
+      <td>${tx.s || '—'}</td>
+      <td>${tx.c}</td>
+      <td class="num" style="color:${tx.t === 'renda' ? '#2ecc71' : '#e74c3c'}">
+        ${tx.t === 'renda' ? '+' : '-'}${formatBRL(tx.v)}
+      </td>
+      <td class="center">
+        <button class="del" onclick="deleteTransaction('${tx.id}')">×</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function deleteTransaction(id) {
+  if (!confirm('Excluir esta transação?')) return;
+  for (const y in DATA.anos) {
+    const idx = DATA.anos[y].tx.findIndex(t => t.id === id);
+    if (idx !== -1) {
+      DATA.anos[y].tx.splice(idx, 1);
+      updateDisplays();
+      return;
+    }
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// 📈 CHARTS
+// ══════════════════════════════════════════════════════════════
+function updateCharts(allMonths, despesas) {
+  const catTotals = {};
+  despesas.forEach(t => { catTotals[t.c] = (catTotals[t.c] || 0) + t.v; });
+  const catLabels = Object.keys(catTotals);
+  const catValues = Object.values(catTotals);
+  const catColors = catLabels.map((_, i) => `hsl(${(i * 47) % 360}, 70%, 60%)`);
+
+  if (chartCategorias) chartCategorias.destroy();
+  const ctx1 = document.getElementById('chart-categorias').getContext('2d');
+  chartCategorias = new Chart(ctx1, {
+    type: 'doughnut',
+    data: {
+      labels: catLabels.length ? catLabels : ['Sem dados'],
+      datasets: [{ data: catValues.length ? catValues : [1], backgroundColor: catColors.length ? catColors : ['#ddd'] }]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+  });
+
+  const barLabels = MONTHS.map(m => m.slice(0,3));
+  const rendaData = Object.values(allMonths).map(m => m.renda);
+  const despData = Object.values(allMonths).map(m => m.desp);
+
+  if (chartMensal) chartMensal.destroy();
+  const ctx2 = document.getElementById('chart-mensal').getContext('2d');
+  chartMensal = new Chart(ctx2, {
+    type: 'bar',
+    data: {
+      labels: barLabels,
+      datasets: [
+        { label: 'Receitas', data: rendaData, backgroundColor: '#2ecc71' },
+        { label: 'Despesas', data: despData, backgroundColor: '#e74c3c' }
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// 💳 CARDS
+// ══════════════════════════════════════════════════════════════
+function addCard() {
+  const nome = document.getElementById('card-nome').value.trim();
+  const limite = parseFloat(document.getElementById('card-limite').value) || 0;
+  const fatura = parseFloat(document.getElementById('card-fatura').value) || 0;
+  const venc = parseInt(document.getElementById('card-venc').value) || 1;
+
+  if (!nome || limite <= 0) { alert('Preencha o nome e o limite corretamente!'); return; }
+
+  if (!DATA.anos[CURRENT_YEAR].cards) DATA.anos[CURRENT_YEAR].cards = [];
+  DATA.anos[CURRENT_YEAR].cards.push({ id: 'c' + Date.now(), nome, limite, fatura, venc });
+
+  document.getElementById('card-nome').value = '';
+  document.getElementById('card-limite').value = '';
+  document.getElementById('card-fatura').value = '';
+  document.getElementById('card-venc').value = '';
+  updateDisplays();
+}
+
+function updateCardsList() {
+  const cards = DATA.anos[CURRENT_YEAR].cards || [];
+  const container = document.getElementById('cards-list');
+  
+  if (cards.length === 0) {
+    container.innerHTML = '<p class="empty">Nenhum cartão cadastrado</p>';
+    return;
+  }
+
+  container.innerHTML = cards.map(card => {
+    const uso = card.limite > 0 ? (card.fatura / card.limite * 100).toFixed(1) : 0;
+    return `
+      <div class="card">
+        <h3>${card.nome} <button class="del" style="float:right;" onclick="deleteCard('${card.id
+        }')">×</button></h3>
+        <p>Limite: <strong>${formatBRL(card.limite)}</strong> | Fatura: <strong style="color:${card.fatura > card.limite * 0.8 ? '#e74c3c' : 'inherit'}">${formatBRL(card.fatura)}</strong></p>
+        <p>Vencimento: dia ${card.venc} | Uso: ${uso}%</p>
+        <div style="height:8px;background:#eee;border-radius:4px;overflow:hidden;margin-top:0.5rem;">
+            <div style="height:100%;width:${Math.min(uso,100)}%;background:${uso > 90 ? '#e74c3c' : uso > 70 ? '#f39c12' : '#2ecc71'};border-radius:4px;"></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function deleteCard(id) {
+  if (!confirm('Excluir este cartão?')) return;
+  DATA.anos[CURRENT_YEAR].cards = DATA.anos[CURRENT_YEAR].cards.filter(c => c.id !== id);
+  updateDisplays();
+}
+
+// ══════════════════════════════════════════════════════════════
+// 🎯 GOALS
+// ══════════════════════════════════════════════════════════════
+function addMeta() {
+  const nome = document.getElementById('meta-nome').value.trim();
+  const alvo = parseFloat(document.getElementById('meta-alvo').value) || 0;
+  const atual = parseFloat(document.getElementById('meta-atual').value) || 0;
+  const prazo = document.getElementById('meta-prazo').value;
+
+  if (!nome || alvo <= 0) { alert('Preencha o nome e o valor alvo corretamente!'); return; }
+
+  if (!DATA.anos[CURRENT_YEAR].metas) DATA.anos[CURRENT_YEAR].metas = [];
+  DATA.anos[CURRENT_YEAR].metas.push({ id: 'm' + Date.now(), nome, alvo, atual, prazo });
+
+  document.getElementById('meta-nome').value = '';
+  document.getElementById('meta-alvo').value = '';
+  document.getElementById('meta-atual').value = '';
+  document.getElementById('meta-prazo').value = '';
+  updateDisplays();
+}
+
+function updateGoalsList() {
+  const metas = DATA.anos[CURRENT_YEAR].metas || [];
+  const container = document.getElementById('metas-list');
+  
+  if (metas.length === 0) {
+    container.innerHTML = '<p class="empty">Nenhuma meta criada</p>';
+    return;
+  }
+
+  container.innerHTML = metas.map(meta => {
+    const progresso = meta.alvo > 0 ? Math.min(100, (meta.atual / meta.alvo) * 100).toFixed(1) : 0;
+    const falta = Math.max(0, meta.alvo - meta.atual);
+    return `
+      <div class="card">
+        <h3>${meta.nome} <button class="del" style="float:right;" onclick="deleteMeta('${meta.id}')">×</button></h3>
+        <p>Economizado: <strong>${formatBRL(meta.atual)}</strong> de ${formatBRL(meta.alvo)}</p>
+        <p>Falta: ${formatBRL(falta)}${meta.prazo ? ` • Prazo: ${meta.prazo}` : ''}</p>
+        <div style="height:12px;background:#eee;border-radius:6px;overflow:hidden;margin-top:0.5rem;">
+          <div style="height:100%;width:${progresso}%;background:var(--purple);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:9px;font-weight:bold;">${progresso}%</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function deleteMeta(id) {
+  if (!confirm('Excluir esta meta?')) return;
+  DATA.anos[CURRENT_YEAR].metas = DATA.anos[CURRENT_YEAR].metas.filter(m => m.id !== id);
+  updateDisplays();
+}
+
+// ══════════════════════════════════════════════════════════════
+// 💾 EXPORT / IMPORT
+// ══════════════════════════════════════════════════════════════
+function exportData() {
+  const backup = Store.export();
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `flora-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+async function importData(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const result = await Store.import(file);
+  if (result.ok) {
+    DATA = Store.load();
+    initApp();
+    alert('Backup importado com sucesso!');
+  } else {
+    alert('Erro ao importar: ' + result.error);
+  }
+  input.value = '';
+}
+
+// Enter key support
+document.addEventListener('keypress', e => {
+  if (e.key === 'Enter' && !isAuthenticated) login();
+});
+</script>
+</body>
+</html>
